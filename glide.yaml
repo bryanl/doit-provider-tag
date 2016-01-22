@@ -1,0 +1,3 @@
+package: github.com/bryanl/doit-provider-tag
+import:
+- package: github.com/natefinch/pie
