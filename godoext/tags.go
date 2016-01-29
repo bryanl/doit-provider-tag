@@ -33,6 +33,7 @@ type TagService interface {
 	Create(name string) (*Tag, *godo.Response, error)
 	List() ([]Tag, *godo.Response, error)
 	Get(name string) (*Tag, *godo.Response, error)
+	Update(oldName, newName string) (*Tag, *godo.Response, error)
 }
 
 type tagsService struct {
@@ -96,7 +97,25 @@ func (ts *tagsService) Get(name string) (*Tag, *godo.Response, error) {
 	}
 
 	return root.Tag, resp, err
+}
 
+func (ts *tagsService) Update(oldName, newName string) (*Tag, *godo.Response, error) {
+	path := fmt.Sprintf("%s/%s", tagsBasePath, oldName)
+
+	updateRequest := &tagUpdateRequest{Name: newName}
+
+	req, err := ts.client.NewRequest("PUT", path, updateRequest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(tagRoot)
+	resp, err := ts.client.Do(req, root)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return root.Tag, resp, err
 }
 
 type tagRoot struct {
@@ -108,5 +127,9 @@ type tagsRoot struct {
 }
 
 type tagCreateRequest struct {
+	Name string `json:"name"`
+}
+
+type tagUpdateRequest struct {
 	Name string `json:"name"`
 }

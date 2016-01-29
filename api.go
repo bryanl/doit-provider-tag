@@ -78,6 +78,31 @@ func (pa *PluginAPI) Get(args interface{}, response *string) error {
 	return nil
 }
 
+// Rename a tag.
+func (pa *PluginAPI) Rename(args interface{}, response *string) error {
+	client := pa.client(args)
+	reqArgs := pa.args(args)
+
+	if len(reqArgs) != 2 {
+		return errors.New("usage: rename <old tag> <new tag>")
+	}
+
+	tag, _, err := client.Tags.Update(reqArgs[0], reqArgs[1])
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := tabwriter.NewWriter(&b, 0, 8, 1, '\t', 0)
+
+	fmt.Fprintf(w, "Name\tDroplets\n")
+	fmt.Fprintf(w, "%s\t%d\n", tag.Name, tag.Resources.Droplets.Count)
+
+	_ = w.Flush()
+	*response = b.String()
+	return nil
+}
+
 func (pa *PluginAPI) client(args interface{}) *godoext.Client {
 	opts := args.(map[string]interface{})
 	token := opts["AccessToken"].(string)
