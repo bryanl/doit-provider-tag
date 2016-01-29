@@ -1,6 +1,12 @@
-hash: 73cc4c0286ffeb450f6bd38e6c017b276a2f1f78db4e2eaab9ed04fde17894d4
-updated: 2016-01-21T16:58:37.940719098-05:00
+hash: 938c1525b9e46875e6b3ee7b42954929cdc27c363472edf20f55aed947765e82
+updated: 2016-01-29T12:51:36.327344326-05:00
 imports:
+- name: github.com/digitalocean/godo
+  version: f75d769b07edce8a73682dcf325b4404f366ab3d
+- name: github.com/google/go-querystring
+  version: 2a60fc2ba6c19de80291203597d752e9ba58e4c0
 - name: github.com/natefinch/pie
   version: 6059396cf8c679e5b6a7c82378e4623ca62f91ff
+- name: github.com/tent/http-link-go
+  version: ac974c61c2f990f4115b119354b5e0b47550e888
 devImports: []
