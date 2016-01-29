@@ -34,6 +34,7 @@ type TagService interface {
 	List() ([]Tag, *godo.Response, error)
 	Get(name string) (*Tag, *godo.Response, error)
 	Update(oldName, newName string) (*Tag, *godo.Response, error)
+	Add(name string, resourceID int) (*Tag, *godo.Response, error)
 }
 
 type tagsService struct {
@@ -118,6 +119,27 @@ func (ts *tagsService) Update(oldName, newName string) (*Tag, *godo.Response, er
 	return root.Tag, resp, err
 }
 
+func (ts *tagsService) Add(name string, resourceID int) (*Tag, *godo.Response, error) {
+	path := fmt.Sprintf("%s/%s/resources.json", tagsBasePath, name)
+
+	// the api only handles droplets right now
+	addRequest := &tagResources{}
+	addRequest.Add(resourceID, "droplet")
+
+	req, err := ts.client.NewRequest("POST", path, addRequest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(tagRoot)
+	resp, err := ts.client.Do(req, root)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return root.Tag, resp, err
+}
+
 type tagRoot struct {
 	Tag *Tag `json:"tag"`
 }
@@ -132,4 +154,17 @@ type tagCreateRequest struct {
 
 type tagUpdateRequest struct {
 	Name string `json:"name"`
+}
+
+type tagResources struct {
+	Resources []tagAddResource `json:"resources"`
+}
+
+func (tr *tagResources) Add(id int, t string) {
+	tr.Resources = append(tr.Resources, tagAddResource{ID: id, Type: t})
+}
+
+type tagAddResource struct {
+	ID   int    `json:"resource_id"`
+	Type string `json:"resource_type"`
 }
