@@ -40,7 +40,7 @@ func (pa *PluginAPI) Create(args interface{}, response *string) error {
 	reqArgs := pa.args(args)
 
 	if len(reqArgs) < 1 {
-		return errors.New("usage: crate <tag name>")
+		return errors.New("usage: create <tag name>")
 	}
 
 	tag, _, err := client.Tags.Create(reqArgs[0])
@@ -50,6 +50,31 @@ func (pa *PluginAPI) Create(args interface{}, response *string) error {
 
 	*response = fmt.Sprintf("created %s", tag.Name)
 
+	return nil
+}
+
+// Get a tag by name.
+func (pa *PluginAPI) Get(args interface{}, response *string) error {
+	client := pa.client(args)
+	reqArgs := pa.args(args)
+
+	if len(reqArgs) < 1 {
+		return errors.New("usage: get <tag name>")
+	}
+
+	tag, _, err := client.Tags.Get(reqArgs[0])
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := tabwriter.NewWriter(&b, 0, 8, 1, '\t', 0)
+
+	fmt.Fprintf(w, "Name\tDroplets\n")
+	fmt.Fprintf(w, "%s\t%d\n", tag.Name, tag.Resources.Droplets.Count)
+
+	_ = w.Flush()
+	*response = b.String()
 	return nil
 }
 
@@ -69,14 +94,4 @@ func (pa *PluginAPI) args(in interface{}) []string {
 	}
 
 	return out
-}
-
-// Tag is a tag.
-type Tag struct {
-	Name string `json:"name"`
-}
-
-// Tags is a collection of tags.
-type Tags struct {
-	Tags []Tag `json:"tags"`
 }

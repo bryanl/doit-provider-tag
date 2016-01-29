@@ -1,6 +1,10 @@
 package godoext
 
-import "github.com/digitalocean/godo"
+import (
+	"fmt"
+
+	"github.com/digitalocean/godo"
+)
 
 const (
 	tagsBasePath = "v2/tags"
@@ -28,6 +32,7 @@ type DropletResources struct {
 type TagService interface {
 	Create(name string) (*Tag, *godo.Response, error)
 	List() ([]Tag, *godo.Response, error)
+	Get(name string) (*Tag, *godo.Response, error)
 }
 
 type tagsService struct {
@@ -74,6 +79,24 @@ func (ts *tagsService) List() ([]Tag, *godo.Response, error) {
 	}
 
 	return root.Tags, resp, err
+}
+
+func (ts *tagsService) Get(name string) (*Tag, *godo.Response, error) {
+	path := fmt.Sprintf("%s/%s", tagsBasePath, name)
+
+	req, err := ts.client.NewRequest("GET", path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(tagRoot)
+	resp, err := ts.client.Do(req, root)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return root.Tag, resp, err
+
 }
 
 type tagRoot struct {
