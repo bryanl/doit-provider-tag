@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"text/tabwriter"
 
@@ -119,19 +120,38 @@ func (pa *PluginAPI) Add(args interface{}, response *string) error {
 		return fmt.Errorf("invalid droplet id: %s", reqArgs[1])
 	}
 
-	tag, _, err := client.Tags.Add(name, id)
+	_, err = client.Tags.Add(name, id)
+	if err != nil {
+
+		log.Println("shit broke", err)
+		return err
+	}
+
+	*response = fmt.Sprintf("added droplet %d to %s", id, name)
+	return nil
+}
+
+// Remove a tag from a resource.
+func (pa *PluginAPI) Remove(args interface{}, response *string) error {
+	client := pa.client(args)
+	reqArgs := pa.args(args)
+
+	if len(reqArgs) != 2 {
+		return errors.New("usage: remove <tag> <droplet id>")
+	}
+
+	name := reqArgs[0]
+	id, err := strconv.Atoi(reqArgs[1])
+	if err != nil {
+		return fmt.Errorf("invalid droplet id: %s", reqArgs[1])
+	}
+
+	_, err = client.Tags.Remove(name, id)
 	if err != nil {
 		return err
 	}
 
-	var b bytes.Buffer
-	w := tabwriter.NewWriter(&b, 0, 8, 1, '\t', 0)
-
-	fmt.Fprintf(w, "Name\tDroplets\n")
-	fmt.Fprintf(w, "%s\t%d\n", tag.Name, tag.Resources.Droplets.Count)
-
-	_ = w.Flush()
-	*response = b.String()
+	*response = fmt.Sprintf("removed droplet %d from %s", id, name)
 	return nil
 }
 

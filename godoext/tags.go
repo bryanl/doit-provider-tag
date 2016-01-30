@@ -2,6 +2,7 @@ package godoext
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/digitalocean/godo"
 )
@@ -34,7 +35,8 @@ type TagService interface {
 	List() ([]Tag, *godo.Response, error)
 	Get(name string) (*Tag, *godo.Response, error)
 	Update(oldName, newName string) (*Tag, *godo.Response, error)
-	Add(name string, resourceID int) (*Tag, *godo.Response, error)
+	Add(name string, resourceID int) (*godo.Response, error)
+	Remove(name string, resourceID int) (*godo.Response, error)
 }
 
 type tagsService struct {
@@ -119,8 +121,9 @@ func (ts *tagsService) Update(oldName, newName string) (*Tag, *godo.Response, er
 	return root.Tag, resp, err
 }
 
-func (ts *tagsService) Add(name string, resourceID int) (*Tag, *godo.Response, error) {
-	path := fmt.Sprintf("%s/%s/resources.json", tagsBasePath, name)
+func (ts *tagsService) Add(name string, resourceID int) (*godo.Response, error) {
+	path := fmt.Sprintf("%s/%s/resources", tagsBasePath, name)
+	log.Println("path", path)
 
 	// the api only handles droplets right now
 	addRequest := &tagResources{}
@@ -128,16 +131,27 @@ func (ts *tagsService) Add(name string, resourceID int) (*Tag, *godo.Response, e
 
 	req, err := ts.client.NewRequest("POST", path, addRequest)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	root := new(tagRoot)
-	resp, err := ts.client.Do(req, root)
+	return ts.client.Do(req, root)
+}
+
+func (ts *tagsService) Remove(name string, resourceID int) (*godo.Response, error) {
+	path := fmt.Sprintf("%s/%s/resources", tagsBasePath, name)
+
+	// the api only handles droplets right now
+	addRequest := &tagResources{}
+	addRequest.Add(resourceID, "droplet")
+
+	req, err := ts.client.NewRequest("DELETE", path, addRequest)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
 
-	return root.Tag, resp, err
+	root := new(tagRoot)
+	return ts.client.Do(req, root)
 }
 
 type tagRoot struct {
